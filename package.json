@@ -10,6 +10,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@aws-sdk/credential-providers": "^3.705.0",
     "@aws-sdk/rds-signer": "^3.705.0",
     "@prisma/adapter-pg": "^6.19.3",
     "@e2b/code-interpreter": "^1.5.1",

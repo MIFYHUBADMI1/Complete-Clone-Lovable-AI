@@ -7,29 +7,24 @@ const globalForPrisma = global as unknown as {
 };
 
 async function initPrisma() {
-  // Skip initialization during build
-  if (process.env.VERCEL_ENV === undefined && process.env.NODE_ENV === 'production') {
+  try {
+    const pool = await getPool();
+    const adapter = new PrismaPg(pool);
+    
+    return new PrismaClient({ 
+      adapter,
+      log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+    });
+  } catch (error) {
+    console.error("Failed to initialize Prisma with IAM adapter:", error);
+    // Fallback to basic client
     return new PrismaClient();
   }
-
-  const pool = await getPool();
-  const adapter = new PrismaPg(pool);
-  
-  return new PrismaClient({ 
-    adapter,
-    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-  });
 }
 
 // Create client lazily
 if (!globalForPrisma.prismaClient && typeof window === 'undefined') {
-  try {
-    globalForPrisma.prismaClient = await initPrisma();
-  } catch (err) {
-    console.error("Failed to initialize Prisma:", err);
-    // Fallback to basic client for build time
-    globalForPrisma.prismaClient = new PrismaClient();
-  }
+  globalForPrisma.prismaClient = await initPrisma();
 }
 
 export const prisma = globalForPrisma.prismaClient!;

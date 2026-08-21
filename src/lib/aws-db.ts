@@ -1,5 +1,6 @@
 import { Signer } from "@aws-sdk/rds-signer";
 import { Pool } from "pg";
+import { fromEnv } from "@aws-sdk/credential-providers";
 
 let pool: Pool | null = null;
 let tokenRefreshInterval: NodeJS.Timeout | null = null;
@@ -10,6 +11,7 @@ async function getAuthToken() {
     hostname: process.env.DATABASE_URL_PGHOST!,
     port: parseInt(process.env.DATABASE_URL_PGPORT || "5432"),
     username: process.env.DATABASE_URL_PGUSER!,
+    credentials: fromEnv(),
   });
 
   return await signer.getAuthToken();
