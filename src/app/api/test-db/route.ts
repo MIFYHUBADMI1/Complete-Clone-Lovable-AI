@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-import { createConnection } from "@vercel/postgres";
+import { sql } from "@vercel/postgres";
 
 export async function GET() {
   try {
     // Test database connection
-    const conn = createConnection({ connectionString: process.env.DATABASE_URL });
-    const result = await conn.sql`SELECT 1 as test`;
+    const result = await sql`SELECT 1 as test`;
     
     return NextResponse.json({
       success: true,
