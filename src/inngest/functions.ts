@@ -6,11 +6,7 @@ import { createMessage } from "@/lib/db";
 import { PROMPT } from "@/prompt";
 import { Sandbox } from "@e2b/code-interpreter";
 import { getSanbox, lastAssitantTextMessageContent } from "./utils";
-import { createClient } from "@vercel/postgres";
-
-const getClient = () => createClient({
-  connectionString: process.env.DATABASE_URL,
-});
+import { sql } from "@vercel/postgres";
 
 interface AgentState {
   summary: string;
@@ -169,17 +165,10 @@ export const codeAgentFunction = inngest.createFunction(
       const message = await createMessage(event.data.projectId, result.state.data.summary, "ASSISTANT", "RESULT");
       
       // Create fragment linked to message
-      const client = getClient();
-      await client.connect();
-      try {
-        await client.query(
-          `INSERT INTO "Fragment" (id, "messageId", "sandboxUrl", title, files, "createdAt", "updatedAt")
-           VALUES (gen_random_uuid(), $1, $2, 'Fragment', $3, NOW(), NOW())`,
-          [message.id, sandboxUrl, JSON.stringify(result.state.data.files)]
-        );
-      } finally {
-        await client.end();
-      }
+      await sql`
+        INSERT INTO "Fragment" (id, "messageId", "sandboxUrl", title, files, "createdAt", "updatedAt")
+        VALUES (gen_random_uuid(), ${message.id}, ${sandboxUrl}, 'Fragment', ${JSON.stringify(result.state.data.files)}, NOW(), NOW())
+      `;
       
       return message;
     });
