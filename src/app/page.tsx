@@ -32,7 +32,7 @@ export default function Home() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm font-medium animate-fade-in">
             <Sparkles className="w-4 h-4" />
-            AI-Powered Code Generation
+            Vettcode Lovable AI-Powered Code Application Builder
           </div>
 
           {/* Main Heading */}

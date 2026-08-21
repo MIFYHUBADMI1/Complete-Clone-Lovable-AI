@@ -3,11 +3,15 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { getPool } from "./aws-db";
 
 const globalForPrisma = global as unknown as { 
-  prisma: PrismaClient;
-  prismaPromise: Promise<PrismaClient> | null;
+  prismaClient: PrismaClient | null;
 };
 
-async function createPrismaClient() {
+async function initPrisma() {
+  // Skip initialization during build
+  if (process.env.VERCEL_ENV === undefined && process.env.NODE_ENV === 'production') {
+    return new PrismaClient();
+  }
+
   const pool = await getPool();
   const adapter = new PrismaPg(pool);
   
@@ -17,13 +21,16 @@ async function createPrismaClient() {
   });
 }
 
-if (!globalForPrisma.prismaPromise) {
-  globalForPrisma.prismaPromise = createPrismaClient();
+// Create client lazily
+if (!globalForPrisma.prismaClient && typeof window === 'undefined') {
+  try {
+    globalForPrisma.prismaClient = await initPrisma();
+  } catch (err) {
+    console.error("Failed to initialize Prisma:", err);
+    // Fallback to basic client for build time
+    globalForPrisma.prismaClient = new PrismaClient();
+  }
 }
 
-export const prisma = await globalForPrisma.prismaPromise;
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
-}
+export const prisma = globalForPrisma.prismaClient!;
 
