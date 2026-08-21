@@ -4,9 +4,14 @@ import { baseProcedure, createTRPCRouter } from "@/trpc/init";
 import z from "zod";
 import { createClient } from "@vercel/postgres";
 
+const getConnectionString = () => 
+  process.env.POSTGRES_URL_NON_POOLING || 
+  process.env.DATABASE_URL || 
+  process.env.POSTGRES_URL;
+
 export const messagesRouter = createTRPCRouter({
   getMany: baseProcedure.query(async () => {
-    const client = createClient();
+    const client = createClient({ connectionString: getConnectionString() });
     await client.connect();
     try {
       const result = await client.query(

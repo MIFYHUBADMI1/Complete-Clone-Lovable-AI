@@ -3,8 +3,12 @@ import { createClient } from "@vercel/postgres";
 
 export async function GET() {
   try {
-    // Use createClient for direct connection
-    const client = createClient();
+    const connectionString = 
+      process.env.POSTGRES_URL_NON_POOLING || 
+      process.env.DATABASE_URL || 
+      process.env.POSTGRES_URL;
+      
+    const client = createClient({ connectionString });
     await client.connect();
     
     // Test database connection
@@ -32,6 +36,7 @@ export async function GET() {
           hasUser: !!process.env.DATABASE_URL_PGUSER,
           hasDatabase: !!process.env.DATABASE_URL_PGDATABASE,
           hasPostgresUrl: !!process.env.POSTGRES_URL,
+          hasPostgresUrlNonPooling: !!process.env.POSTGRES_URL_NON_POOLING,
           hasDatabaseUrl: !!process.env.DATABASE_URL,
           hasAwsRegion: !!process.env.DATABASE_URL_AWS_REGION,
           hasAwsAccountId: !!process.env.DATABASE_URL_AWS_ACCOUNT_ID,

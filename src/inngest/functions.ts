@@ -8,6 +8,11 @@ import { Sandbox } from "@e2b/code-interpreter";
 import { getSanbox, lastAssitantTextMessageContent } from "./utils";
 import { createClient } from "@vercel/postgres";
 
+const getConnectionString = () => 
+  process.env.POSTGRES_URL_NON_POOLING || 
+  process.env.DATABASE_URL || 
+  process.env.POSTGRES_URL;
+
 interface AgentState {
   summary: string;
   files: { [path: string]: string };
@@ -165,7 +170,7 @@ export const codeAgentFunction = inngest.createFunction(
       const message = await createMessage(event.data.projectId, result.state.data.summary, "ASSISTANT", "RESULT");
       
       // Create fragment linked to message
-      const client = createClient();
+      const client = createClient({ connectionString: getConnectionString() });
       await client.connect();
       try {
         await client.query(

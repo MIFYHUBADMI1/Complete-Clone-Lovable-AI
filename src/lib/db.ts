@@ -1,8 +1,14 @@
 import { createClient } from "@vercel/postgres";
 
+// Use POSTGRES_URL_NON_POOLING or DATABASE_URL for direct connections
+const getConnectionString = () => 
+  process.env.POSTGRES_URL_NON_POOLING || 
+  process.env.DATABASE_URL || 
+  process.env.POSTGRES_URL;
+
 export const db = {
   async query(text: string, params?: unknown[]) {
-    const client = createClient();
+    const client = createClient({ connectionString: getConnectionString() });
     await client.connect();
     try {
       const result = await client.query(text, params);
@@ -13,7 +19,7 @@ export const db = {
   },
   
   async execute(text: string, params?: unknown[]) {
-    const client = createClient();
+    const client = createClient({ connectionString: getConnectionString() });
     await client.connect();
     try {
       const result = await client.query(text, params);
@@ -26,7 +32,7 @@ export const db = {
 
 // Database helper functions using createClient (for direct connections)
 export async function createProject(name: string) {
-  const client = createClient();
+  const client = createClient({ connectionString: getConnectionString() });
   await client.connect();
   try {
     const result = await client.query(
@@ -42,7 +48,7 @@ export async function createProject(name: string) {
 }
 
 export async function createMessage(projectId: string, content: string, role: string, type: string) {
-  const client = createClient();
+  const client = createClient({ connectionString: getConnectionString() });
   await client.connect();
   try {
     const result = await client.query(
@@ -58,7 +64,7 @@ export async function createMessage(projectId: string, content: string, role: st
 }
 
 export async function getProject(id: string) {
-  const client = createClient();
+  const client = createClient({ connectionString: getConnectionString() });
   await client.connect();
   try {
     const result = await client.query(
@@ -72,7 +78,7 @@ export async function getProject(id: string) {
 }
 
 export async function getProjectMessages(projectId: string) {
-  const client = createClient();
+  const client = createClient({ connectionString: getConnectionString() });
   await client.connect();
   try {
     const result = await client.query(
