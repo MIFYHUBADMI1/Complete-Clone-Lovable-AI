@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
-import { sql } from "@vercel/postgres";
+import { createClient } from "@vercel/postgres";
 
 export async function GET() {
   try {
-    // Test database connection using Vercel's sql (auto-handles IAM)
-    const result = await sql`SELECT 1 as test`;
+    // Use createClient for direct connection
+    const client = createClient();
+    await client.connect();
+    
+    // Test database connection
+    const result = await client.query("SELECT 1 as test");
+    
+    await client.end();
     
     return NextResponse.json({
       success: true,

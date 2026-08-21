@@ -2,14 +2,20 @@ import { inngest } from "@/inngest/client";
 import { createMessage } from "@/lib/db";
 import { baseProcedure, createTRPCRouter } from "@/trpc/init";
 import z from "zod";
-import { sql } from "@vercel/postgres";
+import { createClient } from "@vercel/postgres";
 
 export const messagesRouter = createTRPCRouter({
   getMany: baseProcedure.query(async () => {
-    const result = await sql`
-      SELECT * FROM "Message" ORDER BY "updatedAt" DESC
-    `;
-    return result.rows;
+    const client = createClient();
+    await client.connect();
+    try {
+      const result = await client.query(
+        'SELECT * FROM "Message" ORDER BY "updatedAt" DESC'
+      );
+      return result.rows;
+    } finally {
+      await client.end();
+    }
   }),
 
   create: baseProcedure
