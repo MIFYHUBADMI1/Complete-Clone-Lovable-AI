@@ -11,14 +11,15 @@ export async function GET() {
       message: "Database connection successful",
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { message: string; code?: string };
     console.error("Database connection error:", error);
     
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
-        code: error.code,
+        error: err.message,
+        code: err.code,
         details: {
           hasHost: !!process.env.DATABASE_URL_PGHOST,
           hasUser: !!process.env.DATABASE_URL_PGUSER,
