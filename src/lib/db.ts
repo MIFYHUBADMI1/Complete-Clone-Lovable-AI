@@ -1,10 +1,45 @@
-import { PrismaClient } from "@/generated/prisma";
+import { sql } from "@vercel/postgres";
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+export const db = {
+  async query(text: string, params?: any[]) {
+    return await sql.query(text, params);
+  },
+  
+  async execute(text: string, params?: any[]) {
+    return await sql.query(text, params);
+  }
+};
 
-export const prisma = globalForPrisma.prisma || new PrismaClient({
-  log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-});
+// Database helper functions
+export async function createProject(name: string) {
+  const result = await sql`
+    INSERT INTO "Project" (id, name, "createdAt", "updatedAt")
+    VALUES (gen_random_uuid(), ${name}, NOW(), NOW())
+    RETURNING *
+  `;
+  return result.rows[0];
+}
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+export async function createMessage(projectId: string, content: string, role: string, type: string) {
+  const result = await sql`
+    INSERT INTO "Message" (id, content, role, type, "projectId", "createdAt", "updatedAt")
+    VALUES (gen_random_uuid(), ${content}, ${role}::"MessageRole", ${type}::"MessageType", ${projectId}, NOW(), NOW())
+    RETURNING *
+  `;
+  return result.rows[0];
+}
+
+export async function getProject(id: string) {
+  const result = await sql`
+    SELECT * FROM "Project" WHERE id = ${id}
+  `;
+  return result.rows[0];
+}
+
+export async function getProjectMessages(projectId: string) {
+  const result = await sql`
+    SELECT * FROM "Message" WHERE "projectId" = ${projectId} ORDER BY "createdAt" ASC
+  `;
+  return result.rows;
+}
 

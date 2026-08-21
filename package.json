@@ -4,13 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev ",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "postinstall": "prisma generate"
+    "lint": "next lint"
   },
   "dependencies": {
     "@e2b/code-interpreter": "^1.5.1",
+    "@vercel/postgres": "^0.10.0",
     "@hookform/resolvers": "^5.4.0",
     "@inngest/agent-kit": "^0.13.2",
     "@prisma/client": "^6.19.3",

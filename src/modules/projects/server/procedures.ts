@@ -1,17 +1,16 @@
 import { inngest } from "@/inngest/client";
-import { prisma } from "@/lib/db";
+import { createProject, createMessage } from "@/lib/db";
 import { baseProcedure, createTRPCRouter } from "@/trpc/init";
 import z from "zod";
 import { generateSlug } from "random-word-slugs";
+import { sql } from "@vercel/postgres";
 
 export const projectsRouter = createTRPCRouter({
   getMany: baseProcedure.query(async () => {
-    const projects = await prisma.project.findMany({
-      orderBy: {
-        updatedAt: "desc",
-      },
-    });
-    return projects;
+    const result = await sql`
+      SELECT * FROM "Project" ORDER BY "updatedAt" DESC
+    `;
+    return result.rows;
   }),
 
   create: baseProcedure
@@ -24,18 +23,10 @@ export const projectsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input }) => {
-      const createdProject = await prisma.project.create({
-        data: {
-          name: generateSlug(2, { format: "kebab" }),
-          messages: {
-            create: {
-              content: input.value,
-              role: "USER",
-              type: "RESULT",
-            },
-          },
-        },
-      });
+      const projectName = generateSlug(2, { format: "kebab" });
+      const createdProject = await createProject(projectName);
+      
+      await createMessage(createdProject.id, input.value, "USER", "RESULT");
 
       await inngest.send({
         name: "code-agent/run",
@@ -44,6 +35,7 @@ export const projectsRouter = createTRPCRouter({
           projectId: createdProject.id,
         },
       });
+      
       return createdProject;
     }),
 });

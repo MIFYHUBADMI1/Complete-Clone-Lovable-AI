@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { sql } from "@vercel/postgres";
 
 export async function GET() {
   try {
     // Test database connection
-    await prisma.$queryRaw`SELECT 1`;
+    const result = await sql`SELECT 1 as test`;
     
     return NextResponse.json({
       success: true,
       message: "Database connection successful",
+      result: result.rows[0],
       timestamp: new Date().toISOString(),
     });
   } catch (error: unknown) {
