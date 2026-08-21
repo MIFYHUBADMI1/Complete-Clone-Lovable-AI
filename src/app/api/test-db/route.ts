@@ -25,6 +25,7 @@ export async function GET() {
           hasHost: !!process.env.DATABASE_URL_PGHOST,
           hasUser: !!process.env.DATABASE_URL_PGUSER,
           hasDatabase: !!process.env.DATABASE_URL_PGDATABASE,
+          hasPostgresUrl: !!process.env.POSTGRES_URL,
           hasDatabaseUrl: !!process.env.DATABASE_URL,
           hasAwsRegion: !!process.env.DATABASE_URL_AWS_REGION,
           hasAwsAccountId: !!process.env.DATABASE_URL_AWS_ACCOUNT_ID,
