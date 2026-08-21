@@ -10,9 +10,6 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@aws-sdk/credential-providers": "^3.705.0",
-    "@aws-sdk/rds-signer": "^3.705.0",
-    "@prisma/adapter-pg": "^6.19.3",
     "@e2b/code-interpreter": "^1.5.1",
     "@hookform/resolvers": "^5.4.0",
     "@inngest/agent-kit": "^0.13.2",
@@ -59,7 +56,6 @@
     "lucide-react": "^0.525.0",
     "next": "15.5.9",
     "next-themes": "^0.4.6",
-    "pg": "^8.13.1",
     "random-word-slugs": "^0.1.7",
     "react": "^19.2.7",
     "react-day-picker": "^9.14.0",
