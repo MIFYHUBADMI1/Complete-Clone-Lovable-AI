@@ -16,7 +16,8 @@ export default function Home() {
   const createProject = useMutation(
     trpc.projects.create.mutationOptions({
       onError: (error) => {
-        toast.error(error.message);
+        // Silently log error, don't show to user
+        console.error("Project creation error:", error);
       },
       onSuccess: (data) => {
         router.push(`/projects/${data.id}`);
