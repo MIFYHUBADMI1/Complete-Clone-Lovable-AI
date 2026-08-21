@@ -32,6 +32,10 @@ export const projectsRouter = createTRPCRouter({
         },
       });
       
-      return createdProject;
+      // Add serialized id for frontend
+      return {
+        ...createdProject,
+        id: createdProject._id!.toString(),
+      };
     }),
 });

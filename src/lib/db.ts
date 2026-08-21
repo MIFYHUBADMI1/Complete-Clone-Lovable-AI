@@ -9,6 +9,7 @@ import { getDb } from './mongodb'
 // Types
 export interface Project {
   _id?: ObjectId
+  id?: string // Serialized _id for frontend use
   name: string
   userId?: string // Link to user from WEB app
   createdAt: Date
