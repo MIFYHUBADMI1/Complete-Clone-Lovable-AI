@@ -1,18 +1,27 @@
-import { sql } from "@vercel/postgres";
+import { createConnection } from "@vercel/postgres";
+
+const getConnection = () => {
+  return createConnection({
+    connectionString: process.env.DATABASE_URL,
+  });
+};
 
 export const db = {
   async query(text: string, params?: unknown[]) {
-    return await sql.query(text, params);
+    const conn = getConnection();
+    return await conn.query(text, params);
   },
   
   async execute(text: string, params?: unknown[]) {
-    return await sql.query(text, params);
+    const conn = getConnection();
+    return await conn.query(text, params);
   }
 };
 
 // Database helper functions
 export async function createProject(name: string) {
-  const result = await sql`
+  const conn = getConnection();
+  const result = await conn.sql`
     INSERT INTO "Project" (id, name, "createdAt", "updatedAt")
     VALUES (gen_random_uuid(), ${name}, NOW(), NOW())
     RETURNING *
@@ -21,7 +30,8 @@ export async function createProject(name: string) {
 }
 
 export async function createMessage(projectId: string, content: string, role: string, type: string) {
-  const result = await sql`
+  const conn = getConnection();
+  const result = await conn.sql`
     INSERT INTO "Message" (id, content, role, type, "projectId", "createdAt", "updatedAt")
     VALUES (gen_random_uuid(), ${content}, ${role}::"MessageRole", ${type}::"MessageType", ${projectId}, NOW(), NOW())
     RETURNING *
@@ -30,14 +40,16 @@ export async function createMessage(projectId: string, content: string, role: st
 }
 
 export async function getProject(id: string) {
-  const result = await sql`
+  const conn = getConnection();
+  const result = await conn.sql`
     SELECT * FROM "Project" WHERE id = ${id}
   `;
   return result.rows[0];
 }
 
 export async function getProjectMessages(projectId: string) {
-  const result = await sql`
+  const conn = getConnection();
+  const result = await conn.sql`
     SELECT * FROM "Message" WHERE "projectId" = ${projectId} ORDER BY "createdAt" ASC
   `;
   return result.rows;
