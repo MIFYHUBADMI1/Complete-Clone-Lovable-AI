@@ -1,8 +1,26 @@
 import { NextResponse } from "next/server";
 import { MongoClient } from 'mongodb';
 
+interface DiagnosticChecks {
+  mongoUriExists?: boolean;
+  mongoUriPrefix?: string;
+  clientCreated?: boolean;
+  connected?: boolean;
+  pingSuccessful?: boolean;
+  collectionsRetrieved?: boolean;
+  usersCollectionExists?: boolean;
+}
+
+interface Diagnostics {
+  timestamp: string;
+  environment: string | undefined;
+  checks: DiagnosticChecks;
+  collections?: string[];
+  userCount?: number;
+}
+
 export async function GET() {
-  const diagnostics: any = {
+  const diagnostics: Diagnostics = {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     checks: {},

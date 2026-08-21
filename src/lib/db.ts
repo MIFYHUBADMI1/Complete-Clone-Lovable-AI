@@ -47,7 +47,7 @@ export async function createProject(name: string, userId?: string): Promise<Proj
     updatedAt: new Date(),
   }
   
-  const result = await collection.insertOne(project as any)
+  const result = await collection.insertOne(project)
   return { ...project, _id: result.insertedId }
 }
 
@@ -69,7 +69,7 @@ export async function createMessage(
     updatedAt: new Date(),
   }
   
-  const result = await collection.insertOne(message as any)
+  const result = await collection.insertOne(message)
   return { ...message, _id: result.insertedId }
 }
 
@@ -91,7 +91,7 @@ export async function createFragment(
     updatedAt: new Date(),
   }
   
-  const result = await collection.insertOne(fragment as any)
+  const result = await collection.insertOne(fragment)
   return { ...fragment, _id: result.insertedId }
 }
 

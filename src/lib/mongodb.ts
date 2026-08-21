@@ -13,6 +13,11 @@ const uri = process.env.MONGODB_URI
 const options = {
   maxPoolSize: 10,
   minPoolSize: 2,
+  serverSelectionTimeoutMS: 10000, // 10 seconds
+  socketTimeoutMS: 45000, // 45 seconds
+  connectTimeoutMS: 10000, // 10 seconds
+  retryWrites: true,
+  retryReads: true,
 }
 
 let client: MongoClient
@@ -20,7 +25,7 @@ let clientPromise: Promise<MongoClient>
 
 // In development mode, use a global variable to preserve connection across hot reloads
 if (process.env.NODE_ENV === 'development') {
-  let globalWithMongo = global as typeof globalThis & {
+  const globalWithMongo = global as typeof globalThis & {
     _mongoClientPromise?: Promise<MongoClient>
   }
 
