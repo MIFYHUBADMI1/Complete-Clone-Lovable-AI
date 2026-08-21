@@ -25,12 +25,16 @@ export const projectsRouter = createTRPCRouter({
         
         await createMessage(createdProject._id!.toString(), input.value, "USER", "RESULT");
 
-        await inngest.send({
+        // Send to Inngest without waiting (fire and forget)
+        // This prevents timeout issues if Inngest is slow
+        inngest.send({
           name: "code-agent/run",
           data: {
             value: input.value,
             projectId: createdProject._id!.toString(),
           },
+        }).catch((error) => {
+          console.error("Inngest send error (non-blocking):", error);
         });
         
         // Add serialized id for frontend
