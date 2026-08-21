@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
-import { createPool } from "@vercel/postgres";
+import { createClient } from "@vercel/postgres";
 
 export async function GET() {
   try {
-    // Create pool with explicit POSTGRES_URL (pooled connection)
-    const pool = createPool({
-      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+    // Create client with DATABASE_URL (direct connection)
+    const client = createClient({
+      connectionString: process.env.DATABASE_URL,
     });
     
+    await client.connect();
+    
     // Test database connection
-    const result = await pool.query("SELECT 1 as test");
+    const result = await client.query("SELECT 1 as test");
+    
+    await client.end();
     
     return NextResponse.json({
       success: true,

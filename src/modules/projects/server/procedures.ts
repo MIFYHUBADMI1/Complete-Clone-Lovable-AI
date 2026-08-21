@@ -3,18 +3,24 @@ import { createProject, createMessage } from "@/lib/db";
 import { baseProcedure, createTRPCRouter } from "@/trpc/init";
 import z from "zod";
 import { generateSlug } from "random-word-slugs";
-import { createPool } from "@vercel/postgres";
+import { createClient } from "@vercel/postgres";
 
-const pool = createPool({
-  connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+const getClient = () => createClient({
+  connectionString: process.env.DATABASE_URL,
 });
 
 export const projectsRouter = createTRPCRouter({
   getMany: baseProcedure.query(async () => {
-    const result = await pool.query(
-      'SELECT * FROM "Project" ORDER BY "updatedAt" DESC'
-    );
-    return result.rows;
+    const client = getClient();
+    await client.connect();
+    try {
+      const result = await client.query(
+        'SELECT * FROM "Project" ORDER BY "updatedAt" DESC'
+      );
+      return result.rows;
+    } finally {
+      await client.end();
+    }
   }),
 
   create: baseProcedure
