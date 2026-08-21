@@ -1,8 +1,8 @@
 import { createPool, sql } from "@vercel/postgres";
 
-// Create a connection pool using DATABASE_URL
+// Create a connection pool using POSTGRES_URL (pooled connection)
 const pool = createPool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
 });
 
 export const db = {

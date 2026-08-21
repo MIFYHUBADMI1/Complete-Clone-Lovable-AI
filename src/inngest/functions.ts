@@ -9,7 +9,7 @@ import { getSanbox, lastAssitantTextMessageContent } from "./utils";
 import { createPool } from "@vercel/postgres";
 
 const pool = createPool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
 });
 
 interface AgentState {

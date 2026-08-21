@@ -3,9 +3,9 @@ import { createPool } from "@vercel/postgres";
 
 export async function GET() {
   try {
-    // Create pool with explicit DATABASE_URL
+    // Create pool with explicit POSTGRES_URL (pooled connection)
     const pool = createPool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
     });
     
     // Test database connection
