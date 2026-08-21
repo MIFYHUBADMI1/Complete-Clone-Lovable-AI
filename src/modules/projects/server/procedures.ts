@@ -19,23 +19,28 @@ export const projectsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input }) => {
-      const projectName = generateSlug(2, { format: "kebab" });
-      const createdProject = await createProject(projectName);
-      
-      await createMessage(createdProject._id!.toString(), input.value, "USER", "RESULT");
+      try {
+        const projectName = generateSlug(2, { format: "kebab" });
+        const createdProject = await createProject(projectName);
+        
+        await createMessage(createdProject._id!.toString(), input.value, "USER", "RESULT");
 
-      await inngest.send({
-        name: "code-agent/run",
-        data: {
-          value: input.value,
-          projectId: createdProject._id!.toString(),
-        },
-      });
-      
-      // Add serialized id for frontend
-      return {
-        ...createdProject,
-        id: createdProject._id!.toString(),
-      };
+        await inngest.send({
+          name: "code-agent/run",
+          data: {
+            value: input.value,
+            projectId: createdProject._id!.toString(),
+          },
+        });
+        
+        // Add serialized id for frontend
+        return {
+          ...createdProject,
+          id: createdProject._id!.toString(),
+        };
+      } catch (error) {
+        console.error("Project creation error:", error);
+        throw new Error(`Failed to create project: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     }),
 });
