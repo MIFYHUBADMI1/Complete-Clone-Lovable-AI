@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
-import { sql } from "@vercel/postgres";
+import { createPool } from "@vercel/postgres";
 
 export async function GET() {
   try {
+    // Create pool with explicit DATABASE_URL
+    const pool = createPool({
+      connectionString: process.env.DATABASE_URL,
+    });
+    
     // Test database connection
-    const result = await sql`SELECT 1 as test`;
+    const result = await pool.query("SELECT 1 as test");
     
     return NextResponse.json({
       success: true,
