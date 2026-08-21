@@ -1,11 +1,11 @@
 import { sql } from "@vercel/postgres";
 
 export const db = {
-  async query(text: string, params?: any[]) {
+  async query(text: string, params?: unknown[]) {
     return await sql.query(text, params);
   },
   
-  async execute(text: string, params?: any[]) {
+  async execute(text: string, params?: unknown[]) {
     return await sql.query(text, params);
   }
 };

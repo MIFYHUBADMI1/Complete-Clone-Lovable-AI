@@ -2,10 +2,11 @@ import { createAgent, createNetwork, createTool, gemini, Tool } from "@inngest/a
 import z from "zod";
 import { inngest } from "./client";
 
-import { prisma } from "@/lib/db";
+import { createMessage } from "@/lib/db";
 import { PROMPT } from "@/prompt";
 import { Sandbox } from "@e2b/code-interpreter";
 import { getSanbox, lastAssitantTextMessageContent } from "./utils";
+import { sql } from "@vercel/postgres";
 
 interface AgentState {
   summary: string;
@@ -157,31 +158,19 @@ export const codeAgentFunction = inngest.createFunction(
     await step.run("save-result", async () => {
       // Comprobar si hay un error
       if (isError) {
-        return await prisma.message.create({
-          data: {
-            projectId: event.data.projectId,
-            content: "Something went wrong, Please try again",
-            role: "ASSISTANT",
-            type: "ERROR",
-          },
-        });
+        return await createMessage(event.data.projectId, "Something went wrong, Please try again", "ASSISTANT", "ERROR");
       }
 
-      return await prisma.message.create({
-        data: {
-          projectId: event.data.projectId,
-          content: result.state.data.summary,
-          role: "ASSISTANT",
-          type: "RESULT",
-          fragment: {
-            create: {
-              sandboxUrl: sandboxUrl,
-              title: "Fragment",
-              files: result.state.data.files,
-            },
-          },
-        },
-      });
+      // Create message and fragment
+      const message = await createMessage(event.data.projectId, result.state.data.summary, "ASSISTANT", "RESULT");
+      
+      // Create fragment linked to message
+      await sql`
+        INSERT INTO "Fragment" (id, "messageId", "sandboxUrl", title, files, "createdAt", "updatedAt")
+        VALUES (gen_random_uuid(), ${message.id}, ${sandboxUrl}, 'Fragment', ${JSON.stringify(result.state.data.files)}, NOW(), NOW())
+      `;
+      
+      return message;
     });
 
     return {
