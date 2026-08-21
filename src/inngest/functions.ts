@@ -2,16 +2,10 @@ import { createAgent, createNetwork, createTool, gemini, Tool } from "@inngest/a
 import z from "zod";
 import { inngest } from "./client";
 
-import { createMessage } from "@/lib/db";
+import { createMessage, createFragment } from "@/lib/db";
 import { PROMPT } from "@/prompt";
 import { Sandbox } from "@e2b/code-interpreter";
 import { getSanbox, lastAssitantTextMessageContent } from "./utils";
-import { createClient } from "@vercel/postgres";
-
-const getConnectionString = () => 
-  process.env.POSTGRES_URL_NON_POOLING || 
-  process.env.DATABASE_URL || 
-  process.env.POSTGRES_URL;
 
 interface AgentState {
   summary: string;
@@ -159,28 +153,23 @@ export const codeAgentFunction = inngest.createFunction(
       return `https://${host}`;
     });
 
-    // Guardar en prisma
+    // Save result to database
     await step.run("save-result", async () => {
-      // Comprobar si hay un error
+      // Check if there's an error
       if (isError) {
         return await createMessage(event.data.projectId, "Something went wrong, Please try again", "ASSISTANT", "ERROR");
       }
 
-      // Create message and fragment
+      // Create message
       const message = await createMessage(event.data.projectId, result.state.data.summary, "ASSISTANT", "RESULT");
       
       // Create fragment linked to message
-      const client = createClient({ connectionString: getConnectionString() });
-      await client.connect();
-      try {
-        await client.query(
-          `INSERT INTO "Fragment" (id, "messageId", "sandboxUrl", title, files, "createdAt", "updatedAt")
-           VALUES (gen_random_uuid(), $1, $2, 'Fragment', $3, NOW(), NOW())`,
-          [message.id, sandboxUrl, JSON.stringify(result.state.data.files)]
-        );
-      } finally {
-        await client.end();
-      }
+      await createFragment(
+        message._id!.toString(),
+        sandboxUrl,
+        'Fragment',
+        result.state.data.files
+      );
       
       return message;
     });

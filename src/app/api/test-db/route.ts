@@ -1,25 +1,23 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@vercel/postgres";
+import { getDb } from "@/lib/mongodb";
 
 export async function GET() {
   try {
-    const connectionString = 
-      process.env.POSTGRES_URL_NON_POOLING || 
-      process.env.DATABASE_URL || 
-      process.env.POSTGRES_URL;
-      
-    const client = createClient({ connectionString });
-    await client.connect();
+    // Test MongoDB connection
+    const db = await getDb();
     
-    // Test database connection
-    const result = await client.query("SELECT 1 as test");
+    // Ping the database
+    await db.command({ ping: 1 });
     
-    await client.end();
+    // Get collections
+    const collections = await db.listCollections().toArray();
+    const collectionNames = collections.map(c => c.name);
     
     return NextResponse.json({
       success: true,
-      message: "Database connection successful",
-      result: result.rows[0],
+      message: "MongoDB connection successful",
+      database: "vettcode",
+      collections: collectionNames,
       timestamp: new Date().toISOString(),
     });
   } catch (error: unknown) {
@@ -32,14 +30,7 @@ export async function GET() {
         error: err.message,
         code: err.code,
         details: {
-          hasHost: !!process.env.DATABASE_URL_PGHOST,
-          hasUser: !!process.env.DATABASE_URL_PGUSER,
-          hasDatabase: !!process.env.DATABASE_URL_PGDATABASE,
-          hasPostgresUrl: !!process.env.POSTGRES_URL,
-          hasPostgresUrlNonPooling: !!process.env.POSTGRES_URL_NON_POOLING,
-          hasDatabaseUrl: !!process.env.DATABASE_URL,
-          hasAwsRegion: !!process.env.DATABASE_URL_AWS_REGION,
-          hasAwsAccountId: !!process.env.DATABASE_URL_AWS_ACCOUNT_ID,
+          hasMongoUri: !!process.env.MONGODB_URI,
         },
       },
       { status: 500 }

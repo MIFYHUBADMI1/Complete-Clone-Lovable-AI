@@ -1,92 +1,129 @@
-import { createClient } from "@vercel/postgres";
+/**
+ * Database operations for Projects, Messages, and Fragments
+ * Uses MongoDB - shared with WEB application (vettcode database)
+ */
 
-// Use POSTGRES_URL_NON_POOLING or DATABASE_URL for direct connections
-const getConnectionString = () => 
-  process.env.POSTGRES_URL_NON_POOLING || 
-  process.env.DATABASE_URL || 
-  process.env.POSTGRES_URL;
+import { ObjectId } from 'mongodb'
+import { getDb } from './mongodb'
 
-export const db = {
-  async query(text: string, params?: unknown[]) {
-    const client = createClient({ connectionString: getConnectionString() });
-    await client.connect();
-    try {
-      const result = await client.query(text, params);
-      return result;
-    } finally {
-      await client.end();
-    }
-  },
+// Types
+export interface Project {
+  _id?: ObjectId
+  name: string
+  userId?: string // Link to user from WEB app
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface Message {
+  _id?: ObjectId
+  content: string
+  role: 'USER' | 'ASSISTANT'
+  type: 'RESULT' | 'ERROR'
+  projectId: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface Fragment {
+  _id?: ObjectId
+  messageId: string
+  sandboxUrl: string
+  title: string
+  files: Record<string, string> // JSON object of files
+  createdAt: Date
+  updatedAt: Date
+}
+
+// Database helper functions
+export async function createProject(name: string, userId?: string): Promise<Project> {
+  const db = await getDb()
+  const collection = db.collection<Project>('projects')
   
-  async execute(text: string, params?: unknown[]) {
-    const client = createClient({ connectionString: getConnectionString() });
-    await client.connect();
-    try {
-      const result = await client.query(text, params);
-      return result;
-    } finally {
-      await client.end();
-    }
+  const project: Project = {
+    name,
+    userId,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   }
-};
-
-// Database helper functions using createClient (for direct connections)
-export async function createProject(name: string) {
-  const client = createClient({ connectionString: getConnectionString() });
-  await client.connect();
-  try {
-    const result = await client.query(
-      `INSERT INTO "Project" (id, name, "createdAt", "updatedAt")
-       VALUES (gen_random_uuid(), $1, NOW(), NOW())
-       RETURNING *`,
-      [name]
-    );
-    return result.rows[0];
-  } finally {
-    await client.end();
-  }
+  
+  const result = await collection.insertOne(project as any)
+  return { ...project, _id: result.insertedId }
 }
 
-export async function createMessage(projectId: string, content: string, role: string, type: string) {
-  const client = createClient({ connectionString: getConnectionString() });
-  await client.connect();
-  try {
-    const result = await client.query(
-      `INSERT INTO "Message" (id, content, role, type, "projectId", "createdAt", "updatedAt")
-       VALUES (gen_random_uuid(), $1, $2::"MessageRole", $3::"MessageType", $4, NOW(), NOW())
-       RETURNING *`,
-      [content, role, type, projectId]
-    );
-    return result.rows[0];
-  } finally {
-    await client.end();
+export async function createMessage(
+  projectId: string,
+  content: string,
+  role: 'USER' | 'ASSISTANT',
+  type: 'RESULT' | 'ERROR'
+): Promise<Message> {
+  const db = await getDb()
+  const collection = db.collection<Message>('messages')
+  
+  const message: Message = {
+    content,
+    role,
+    type,
+    projectId,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   }
+  
+  const result = await collection.insertOne(message as any)
+  return { ...message, _id: result.insertedId }
 }
 
-export async function getProject(id: string) {
-  const client = createClient({ connectionString: getConnectionString() });
-  await client.connect();
-  try {
-    const result = await client.query(
-      `SELECT * FROM "Project" WHERE id = $1`,
-      [id]
-    );
-    return result.rows[0];
-  } finally {
-    await client.end();
+export async function createFragment(
+  messageId: string,
+  sandboxUrl: string,
+  title: string,
+  files: Record<string, string>
+): Promise<Fragment> {
+  const db = await getDb()
+  const collection = db.collection<Fragment>('fragments')
+  
+  const fragment: Fragment = {
+    messageId,
+    sandboxUrl,
+    title,
+    files,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   }
+  
+  const result = await collection.insertOne(fragment as any)
+  return { ...fragment, _id: result.insertedId }
 }
 
-export async function getProjectMessages(projectId: string) {
-  const client = createClient({ connectionString: getConnectionString() });
-  await client.connect();
-  try {
-    const result = await client.query(
-      `SELECT * FROM "Message" WHERE "projectId" = $1 ORDER BY "createdAt" ASC`,
-      [projectId]
-    );
-    return result.rows;
-  } finally {
-    await client.end();
-  }
+export async function getProject(id: string): Promise<Project | null> {
+  const db = await getDb()
+  const collection = db.collection<Project>('projects')
+  return await collection.findOne({ _id: new ObjectId(id) })
+}
+
+export async function getProjectMessages(projectId: string): Promise<Message[]> {
+  const db = await getDb()
+  const collection = db.collection<Message>('messages')
+  return await collection
+    .find({ projectId })
+    .sort({ createdAt: 1 })
+    .toArray()
+}
+
+export async function getAllProjects(): Promise<Project[]> {
+  const db = await getDb()
+  const collection = db.collection<Project>('projects')
+  return await collection
+    .find()
+    .sort({ updatedAt: -1 })
+    .toArray()
+}
+
+export async function getAllMessages(): Promise<Message[]> {
+  const db = await getDb()
+  const collection = db.collection<Message>('messages')
+  return await collection
+    .find()
+    .sort({ updatedAt: -1 })
+    .toArray()
 }
